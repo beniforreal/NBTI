@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>사진첩</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="./js/data-manager.js"></script>
+</head>
+<body>
+  <!-- 상단 헤더 -->
+  <header class="main-header">
+    <div class="header-content">
+      <a href="./index.html" class="logo">
+        <h1>🏰 NBTI 길드</h1>
+      </a>
+      <nav class="header-nav">
+        <a href="./picture.html" class="nav-link" data-page="picture">
+          <img src="./img/camera.png" alt="카메라" class="nav-icon">
+          사진첩
+        </a>
+        <a href="./members.html" class="nav-link" data-page="members">👥 길드원</a>
+        <a href="#" class="nav-link login-btn" id="loginBtn" title="로그인">
+          <i class="fa-solid fa-right-to-bracket" style="color: #FFD43B;"></i>
+        </a>
+      </nav>
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 모바일 사이드바 오버레이 -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+
+  <!-- 모바일 사이드바 -->
+  <div class="mobile-sidebar" id="mobileSidebar">
+    <div class="sidebar-header">
+      <a href="./index.html" class="sidebar-logo">
+        <h2>🏰 NBTI 길드</h2>
+      </a>
+      <button class="sidebar-close" id="sidebarClose">&times;</button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="./picture.html" class="sidebar-link" data-page="picture">
+        <img src="./img/camera.png" alt="카메라" class="sidebar-icon">
+        사진첩
+      </a>
+      <a href="./members.html" class="sidebar-link" data-page="members">👥 길드원</a>
+      <a href="#" class="sidebar-link login-btn" id="mobileLoginBtn" title="로그인">
+        <i class="fa-solid fa-right-to-bracket" style="color: #FFD43B;"></i> 로그인
+      </a>
+    </nav>
+  </div>
+
+  <!-- 히어로 섹션 -->
+  <section class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <p class="hero-subtitle">마비노기 모바일 던컨 서버</p>
+      <h1 class="hero-title">NBTI 길드</h1>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="page-header">
+      <div class="page-title-row">
+        <h1>
+          <img src="./img/camera.png" alt="카메라" class="page-icon">
+          사진첩
+        </h1>
+        <button class="search-toggle-btn" id="searchToggle" title="검색">
+          🔍
+        </button>
+      </div>
+      <nav class="toolbar">
+        <button class="btn" id="openAdd" style="display:none">사진 업로드</button>
+      </nav>
+      <div class="search search-collapsed" id="searchContainer">
+        <input id="q" placeholder="검색: 제목/부제/작성자/태그">
+      </div>
+    </div>
+
+    <section id="grid" class="grid"></section>
+    <div id="empty" class="empty" hidden>아직 업로드된 사진이 없습니다. 우측 상단 <b>사진 업로드</b> 버튼을 눌러 추가하세요.</div>
+
+    <footer>로컬 저장소(localStorage)에 메타데이터가 저장됩니다. 이미지는 ImgBB에 업로드됩니다.</footer>
+  </div>
+
+
+  <!-- 업로드 다이얼로그 -->
+  <dialog id="dlg">
+    <div class="dlg-h">사진 업로드</div>
+    <form method="dialog" id="form">
+      <div class="dlg-b">
+        <div>
+          <label>이미지 파일</label>
+          <input type="file" id="file" accept="image/*" required>
+        </div>
+        <div class="row2">
+          <div><label>제목</label><input id="title" placeholder="예) 한여름 밤의 꿈" required></div>
+          <div><label>부제/장소</label><input id="subtitle" placeholder="예) 클랜 / 서울"></div>
+        </div>
+        <div class="row2">
+          <div><label>작성자</label><input id="author" placeholder="예) 라이티"></div>
+          <div><label>태그(쉼표로 구분)</label><input id="tags" placeholder="예) 길드,모임,이벤트"></div>
+        </div>
+      </div>
+      <div class="dlg-f">
+        <button class="btn" type="button" id="cancelBtn">취소</button>
+        <button class="btn" id="submitBtn" value="default">업로드</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 상세 페이지 모달 -->
+  <div id="detailModal" class="detail-modal">
+    <div class="detail-content">
+      <div class="detail-header">
+        <h2 id="detailTitle" class="detail-title"></h2>
+        <button id="detailClose" class="detail-close">&times;</button>
+      </div>
+      <div class="detail-body">
+        <img id="detailImage" class="detail-image" src="" alt="">
+        <div class="detail-meta">
+          <div class="detail-row">
+            <span class="detail-label">부제/장소</span>
+            <span id="detailSubtitle" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">작성자</span>
+            <span id="detailAuthor" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">업로드일</span>
+            <span id="detailDate" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">태그</span>
+            <div id="detailTags" class="detail-tags"></div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <a id="detailViewOriginal" class="btn" href="" target="_blank">원본 보기</a>
+          <button id="detailDelete" class="btn danger" style="display:none">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 로그인 모달 -->
+  <div id="loginModal" class="login-modal">
+    <div class="login-modal-content">
+      <div class="login-modal-header">
+        <h2>길드원 로그인</h2>
+        <button class="login-modal-close" id="loginModalClose">&times;</button>
+      </div>
+      <div class="login-modal-body">
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="loginId">아이디</label>
+            <input type="text" id="loginId" placeholder="아이디를 입력하세요" required>
+          </div>
+          <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+          </div>
+          <button type="submit" class="btn btn-primary">로그인</button>
+        </form>
+        <div class="login-help">
+          <p>💡 테스트 계정:</p>
+          <ul>
+            <li>작은음표: smallnote / guildmaster123</li>
+            <li>아쉬운데잉: ashy / ashy123</li>
+            <li>돌하나: dol / dol123</li>
+            <li>전사도로롱: doro / doro123</li>
+            <li>이시후: sihu / sihu123</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const IMGBB_KEY = "ee1e38cf23a8ac3daf5a2dca469763ab";
+
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const q = document.getElementById('q');
+    const dlg = document.getElementById('dlg');
+    const openAdd = document.getElementById('openAdd');
+    const form = document.getElementById('form');
+    const file = document.getElementById('file');
+    const titleEl = document.getElementById('title');
+    const subtitleEl = document.getElementById('subtitle');
+    const authorEl = document.getElementById('author');
+    const tagsEl = document.getElementById('tags');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // 상세 모달 요소들
+    const detailModal = document.getElementById('detailModal');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailImage = document.getElementById('detailImage');
+    const detailSubtitle = document.getElementById('detailSubtitle');
+    const detailAuthor = document.getElementById('detailAuthor');
+    const detailDate = document.getElementById('detailDate');
+    const detailTags = document.getElementById('detailTags');
+    const detailViewOriginal = document.getElementById('detailViewOriginal');
+    const detailDelete = document.getElementById('detailDelete');
+    const detailClose = document.getElementById('detailClose');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    // 검색 토글 관련 요소들
+    const searchToggle = document.getElementById('searchToggle');
+    const searchContainer = document.getElementById('searchContainer');
+    
+    // 관리자 권한 확인
+    const ADMIN_KEY = "admin.authenticated";
+    const isAdmin = localStorage.getItem(ADMIN_KEY) === 'true';
+
+    async function loadPhotos(){
+      try{ 
+        // 캐시를 강제로 새로고침하여 최신 데이터 보장
+        dataManager.clearCache();
+        return await dataManager.loadPhotos(); 
+      }
+      catch(e){ 
+        console.error('사진 로드 실패:', e);
+        return []; 
+      }
+    }
+    
+    function fmtDate(ts){
+      return utils.formatDate(ts);
+    }
+    async function render(filter=""){
+      const items = await loadPhotos();
+      const term = filter.trim().toLowerCase();
+      const filtered = term ? items.filter(it=>{
+        const hay = [it.title,it.subtitle,it.author,(it.tags||[]).join(",")].join(" ").toLowerCase();
+        return hay.includes(term);
+      }) : items;
+
+      grid.innerHTML = "";
+      if(filtered.length===0){ empty.hidden=false; return; }
+      empty.hidden=true;
+
+      for(const it of filtered.sort((a,b)=>(b.updatedAt || b.createdAt)-(a.updatedAt || a.createdAt))){
+        const card = document.createElement('article'); card.className="card";
+        card.innerHTML = `
+          <div class="thumb" style="cursor:pointer" data-id="${it.id}">${it.url ? `<img src="${it.url}" alt="">`:""}</div>
+          <div class="meta">
+            <h3 class="title" style="cursor:pointer" data-id="${it.id}">${utils.escapeHtml(it.title)}</h3>
+            <p class="sub">${utils.escapeHtml(it.subtitle||"")}</p>
+            <div class="row">
+              <span>${utils.escapeHtml(it.author||"")}</span>
+              <span>${fmtDate(it.updatedAt || it.createdAt)}</span>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+              ${(it.tags||[]).slice(0,6).map(t=>`<span class="pill">${utils.escapeHtml(t)}</span>`).join("")}
+            </div>
+            <div style="margin-top:10px;display:flex;gap:6px">
+              <a class="btn" href="${it.url}" target="_blank">원본 보기</a>
+              ${isAdmin ? `<button class="btn danger" data-id="${it.id}">삭제</button>` : ''}
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      }
+
+      // 상세 보기 핸들러 (이미지와 제목 클릭)
+      grid.querySelectorAll('.thumb, .title').forEach(element=>{
+        element.onclick = () => {
+          const id = element.getAttribute('data-id');
+          showDetail(id);
+        };
+      });
+
+      // 삭제 핸들러
+      grid.querySelectorAll('.danger').forEach(btn=>{
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          const items = await loadPhotos();
+          const item = items.find(it => it.id === id);
+          if (!item) return;
+          
+          // admin.html의 삭제 모달 사용
+          if (window.showDeleteModal) {
+            window.showDeleteModal(
+              `정말로 '${item.title}'을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+              async () => {
+                const success = await dataManager.deletePhoto(id);
+                if (success) {
+                  await render(q.value);
+                } else {
+                  alert('삭제에 실패했습니다.');
+                }
+              }
+            );
+          } else {
+            // admin.html이 로드되지 않은 경우 기본 confirm 사용
+            if (confirm(`정말로 '${item.title}'을(를) 삭제하시겠습니까?`)) {
+              const success = await dataManager.deletePhoto(id);
+              if (success) {
+                await render(q.value);
+              } else {
+                alert('삭제에 실패했습니다.');
+              }
+            }
+          }
+        };
+      });
+    }
+    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]))}
+
+    // 상세 페이지 표시 함수
+    async function showDetail(id) {
+      const items = await loadPhotos();
+      const item = items.find(it => it.id === id);
+      if (!item) return;
+
+      detailTitle.textContent = item.title;
+      detailImage.src = item.url;
+      detailImage.alt = item.title;
+      detailSubtitle.textContent = item.subtitle || "정보 없음";
+      detailAuthor.textContent = item.author || "정보 없음";
+      detailDate.textContent = fmtDate(item.updatedAt || item.createdAt);
+      detailViewOriginal.href = item.url;
+      
+      // 태그 표시
+      detailTags.innerHTML = "";
+      if (item.tags && item.tags.length > 0) {
+        item.tags.forEach(tag => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'pill';
+          tagEl.textContent = tag;
+          detailTags.appendChild(tagEl);
+        });
+      } else {
+        detailTags.innerHTML = '<span style="color: var(--muted); font-style: italic;">태그 없음</span>';
+      }
+
+      // 삭제 버튼 이벤트 (관리자만)
+      if (isAdmin) {
+        detailDelete.style.display = 'inline-block';
+        detailDelete.onclick = async () => {
+          // admin.html의 삭제 모달 사용
+          if (window.showDeleteModal) {
+            window.showDeleteModal(
+              `정말로 '${item.title}'을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+              async () => {
+                const success = await dataManager.deletePhoto(id);
+                if (success) {
+                  await render(q.value);
+                  detailModal.style.display = 'none';
+                } else {
+                  alert('삭제에 실패했습니다.');
+                }
+              }
+            );
+          } else {
+            // admin.html이 로드되지 않은 경우 기본 confirm 사용
+            if (confirm(`정말 '${item.title}'을(를) 삭제하시겠습니까?`)) {
+              const success = await dataManager.deletePhoto(id);
+              if (success) {
+                await render(q.value);
+                detailModal.style.display = 'none';
+              } else {
+                alert('삭제에 실패했습니다.');
+              }
+            }
+          }
+        };
+      }
+
+      detailModal.style.display = 'flex';
+    }
+
+    // 모달 닫기 이벤트
+    detailClose.onclick = () => detailModal.style.display = 'none';
+    detailModal.onclick = (e) => {
+      if (e.target === detailModal) detailModal.style.display = 'none';
+    };
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && detailModal.style.display === 'flex') {
+        detailModal.style.display = 'none';
+      }
+    });
+
+    // 검색 토글 기능
+    function toggleSearch() {
+      searchContainer.classList.toggle('search-collapsed');
+      if (searchContainer.classList.contains('search-collapsed')) {
+        searchToggle.textContent = '🔍';
+        searchToggle.title = '검색';
+        searchToggle.classList.remove('close-btn');
+        q.value = '';
+        render('');
+      } else {
+        searchToggle.textContent = '';
+        searchToggle.title = '검색 닫기';
+        searchToggle.classList.add('close-btn');
+        q.focus();
+      }
+    }
+
+    // 검색 토글 버튼 이벤트
+    searchToggle.addEventListener('click', toggleSearch);
+
+    // 관리자 권한에 따른 UI 표시
+    if (isAdmin) {
+      openAdd.style.display = 'inline-block';
+    }
+
+    q.addEventListener('input', ()=>render(q.value));
+    openAdd.addEventListener('click', ()=>{ form.reset(); dlg.showModal(); });
+
+    // 업로드 모달 닫기 이벤트
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) {
+        dlg.close();
+      }
+    });
+
+    // ESC 키로 업로드 모달 닫기
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dlg.close();
+      }
+    });
+
+    // 취소 버튼 클릭 이벤트
+    cancelBtn.addEventListener('click', () => {
+      dlg.close();
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = file.files?.[0];
+      if(!f){ alert("이미지를 선택하세요."); return; }
+      submitBtn.disabled = true; submitBtn.textContent = "업로드 중…";
+
+      try{
+        const fd = new FormData(); fd.append("image", f);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:"POST", body:fd });
+        if(!res.ok) throw new Error("ImgBB 업로드 실패");
+        const data = await res.json();
+        const url = data?.data?.url || data?.data?.display_url;
+        if(!url) throw new Error("응답 파싱 실패");
+
+        const photoData = {
+          url,
+          title: titleEl.value.trim(),
+          subtitle: subtitleEl.value.trim(),
+          author: authorEl.value.trim(),
+          tags: (tagsEl.value||"").split(",").map(s=>s.trim()).filter(Boolean)
+        };
+        
+        await dataManager.addPhoto(photoData);
+        dlg.close(); 
+        await render(q.value);
+      }catch(err){
+        alert(err.message);
+      }finally{
+        submitBtn.disabled=false; submitBtn.textContent="업로드";
+      }
+    });
+
+
+    // 로그인 모달 관련 변수
+    let currentUser = null;
+    const loginModal = document.getElementById('loginModal');
+    const loginBtn = document.getElementById('loginBtn');
+    const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+    const loginModalClose = document.getElementById('loginModalClose');
+    const loginForm = document.getElementById('loginForm');
+
+    // 로그인 모달 열기
+    function openLoginModal() {
+      loginModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 로그인 모달 닫기
+    function closeLoginModal() {
+      loginModal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // 로그인 처리
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const loginId = document.getElementById('loginId').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        // 캐시를 강제로 새로고침하여 최신 데이터 보장
+        dataManager.clearCache();
+        const members = await dataManager.loadMembers();
+        const user = members.find(member => 
+          member.loginId === loginId && member.password === password
+        );
+        
+        if (user) {
+          currentUser = user;
+          // 로그인 시간 업데이트
+          await dataManager.updateMember(user.id, { lastLogin: Date.now() });
+          
+          // 세션 저장
+          localStorage.setItem('user.authenticated', 'true');
+          localStorage.setItem('user.id', user.id);
+          
+          // 로그인 버튼을 마이페이지 버튼으로 변경
+          updateLoginButton();
+          closeLoginModal();
+          
+          alert(`${user.name}님, 환영합니다!`);
+        } else {
+          alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+        }
+      } catch (error) {
+        console.error('로그인 오류:', error);
+        alert('로그인 중 오류가 발생했습니다.');
+      }
+    });
+
+    // 로그인 버튼 업데이트
+    function updateLoginButton() {
+      if (currentUser) {
+        loginBtn.innerHTML = `<i class="fa-solid fa-user" style="color: #4CAF50;"></i>`;
+        loginBtn.title = `${currentUser.name}님 (클릭하여 마이페이지)`;
+        loginBtn.href = './mypage.html';
+        
+        mobileLoginBtn.innerHTML = `<i class="fa-solid fa-user" style="color: #4CAF50;"></i> ${currentUser.name}`;
+        mobileLoginBtn.title = '마이페이지';
+        mobileLoginBtn.href = './mypage.html';
+      } else {
+        loginBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket" style="color: #FFD43B;"></i>`;
+        loginBtn.title = '로그인';
+        loginBtn.href = '#';
+        
+        mobileLoginBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket" style="color: #FFD43B;"></i> 로그인`;
+        mobileLoginBtn.title = '로그인';
+        mobileLoginBtn.href = '#';
+      }
+    }
+
+    // 로그인 버튼 클릭 이벤트
+    loginBtn.addEventListener('click', (e) => {
+      if (!currentUser) {
+        e.preventDefault();
+        openLoginModal();
+      }
+    });
+
+    mobileLoginBtn.addEventListener('click', (e) => {
+      if (!currentUser) {
+        e.preventDefault();
+        openLoginModal();
+      }
+    });
+
+    // 모달 닫기 이벤트
+    loginModalClose.addEventListener('click', closeLoginModal);
+    loginModal.addEventListener('click', (e) => {
+      if (e.target === loginModal) {
+        closeLoginModal();
+      }
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && loginModal.style.display === 'flex') {
+        closeLoginModal();
+      }
+    });
+
+    // 세션 확인 및 로그인 상태 복원
+    function checkLoginStatus() {
+      const isAuthenticated = localStorage.getItem('user.authenticated') === 'true';
+      const userId = localStorage.getItem('user.id');
+      
+      if (isAuthenticated && userId) {
+        // 캐시를 강제로 새로고침하여 최신 데이터 보장
+        dataManager.clearCache();
+        dataManager.loadMembers().then(members => {
+          const user = members.find(member => member.id === userId);
+          if (user) {
+            currentUser = user;
+            updateLoginButton();
+          }
+        }).catch(error => {
+          console.error('사용자 정보 로드 오류:', error);
+        });
+      }
+    }
+
+    // 페이지 초기화
+    async function initializePage() {
+      try {
+        await render();
+        checkLoginStatus();
+        console.log('사진첩 페이지가 로드되었습니다.');
+      } catch (error) {
+        console.error('페이지 초기화 중 오류:', error);
+      }
+    }
+
+    // 헤더 이벤트 초기화 함수
+    function initHeaderEvents() {
+      // 현재 페이지 감지 및 활성 상태 설정
+      const currentPage = getCurrentPage();
+      setActiveNav(currentPage);
+      
+      // 모바일 메뉴 기능
+      initMobileMenu();
+    }
+
+    // 현재 페이지 감지
+    function getCurrentPage() {
+      const path = window.location.pathname;
+      if (path.includes('index.html') || path === '/' || path.endsWith('/')) return 'index';
+      if (path.includes('picture.html')) return 'picture';
+      if (path.includes('members.html')) return 'members';
+      if (path.includes('mypage.html')) return 'mypage';
+      if (path.includes('admin.html')) return 'admin';
+      return 'index';
+    }
+
+    // 활성 네비게이션 설정
+    function setActiveNav(currentPage) {
+      // 데스크톱 네비게이션
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-page') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+      
+      // 모바일 사이드바 네비게이션
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-page') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    // 모바일 메뉴 기능
+    function initMobileMenu() {
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileSidebar = document.getElementById('mobileSidebar');
+      const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+      const sidebarClose = document.getElementById('sidebarClose');
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+      if (!mobileMenuBtn || !mobileSidebar || !mobileSidebarOverlay) return;
+
+      // 사이드바 열기
+      function openSidebar() {
+        mobileSidebar.classList.add('active');
+        mobileSidebarOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      // 사이드바 닫기
+      function closeSidebar() {
+        mobileSidebar.classList.remove('active');
+        mobileSidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      // 햄버거 메뉴 클릭
+      mobileMenuBtn.addEventListener('click', openSidebar);
+
+      // 사이드바 닫기 버튼 클릭
+      sidebarClose.addEventListener('click', closeSidebar);
+
+      // 사이드바 링크 클릭 시 닫기
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', closeSidebar);
+      });
+
+      // 오버레이 클릭 시 닫기
+      mobileSidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // 헤더 이벤트 초기화
+    initHeaderEvents();
+    
+    // 페이지 초기화
+    initializePage();
+
+  </script>
+</body>
+</html>

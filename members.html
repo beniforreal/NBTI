@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NBTI 길드 - 메인</title>
+  <title>길드원 정리 & 업로드</title>
   <meta name="color-scheme" content="dark light">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,7 +14,7 @@
   <header class="main-header">
     <div class="header-content">
       <a href="./index.html" class="logo">
-        <h1>NBTI 길드</h1>
+        <h1>🏰 NBTI 길드</h1>
       </a>
       <nav class="header-nav">
         <a href="./picture.html" class="nav-link" data-page="picture">
@@ -66,39 +66,44 @@
     </div>
   </section>
 
-  <!-- 메인 컨텐츠 -->
-  <main class="main-content">
-    <div class="content-sections-container">
-      <!-- 사진첩 섹션 -->
-      <section class="content-section photo-section">
-        <div class="section-header">
-          <h2 class="section-title">
-            <img src="./img/camera.png" alt="카메라" class="section-icon">
-            사진첩
-          </h2>
-        </div>
-        
-        <div class="photo-grid" id="photoGrid">
-          <!-- 사진 카드들이 여기에 동적으로 추가됩니다 -->
-        </div>
-        
-        <a href="./picture.html" class="more-btn">더 많은 사진 보기</a>
-      </section>
-
-      <!-- 길드원 섹션 -->
-      <section class="content-section member-section">
-        <div class="section-header">
-          <h2 class="section-title">👥 길드원</h2>
-        </div>
-        
-        <div class="member-grid" id="memberGrid">
-          <!-- 길드원 카드들이 여기에 동적으로 추가됩니다 -->
-        </div>
-        
-        <a href="./members.html" class="more-btn">전체 길드원 보기</a>
-      </section>
+  <div class="wrap">
+    <div class="page-header">
+      <div class="page-title-row">
+        <h1>👥 길드원 정리</h1>
+        <button class="search-toggle-btn" id="searchToggle" title="검색">
+          🔍
+        </button>
+      </div>
+      <nav class="toolbar">
+        <button class="btn" id="addMember" style="display:none">길드원 추가</button>
+      </nav>
+      <div class="search search-collapsed" id="searchContainer">
+        <input id="q" placeholder="검색: 이름/직책">
+      </div>
     </div>
-  </main>
+
+    <section id="grid" class="grid"></section>
+  </div>
+
+
+  <template id="cardTmpl">
+    <article class="card">
+      <div class="cover">
+        <span class="cover-placeholder" style="opacity:.5">커버 없음</span>
+        <div class="cover-upload-icon" style="display:none">
+          <input type="file" class="cover-file-input" accept="image/*" style="display:none">
+          <button class="cover-upload-btn" title="커버 이미지 업로드">📷</button>
+        </div>
+      </div>
+      <div class="meta">
+        <h3 class="title"></h3>
+        <p class="sub"></p>
+        <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap">
+          <a class="pill link" target="_blank" style="display:none">원본</a>
+        </div>
+      </div>
+    </article>
+  </template>
 
   <!-- 로그인 모달 -->
   <div id="loginModal" class="login-modal">
@@ -134,115 +139,196 @@
   </div>
 
   <script>
-    // 사진첩 데이터 로드 및 표시
-    async function loadPhotoPreview() {
-      const photoGrid = document.getElementById('photoGrid');
-      
-      try {
-        // 캐시를 강제로 새로고침하여 최신 데이터 보장
-        dataManager.clearCache();
-        const photos = await dataManager.loadPhotos();
-        const recentPhotos = photos
-          .sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt))
-          .slice(0, 8);
-        
-        if (recentPhotos.length === 0) {
-          photoGrid.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 40px;">아직 업로드된 사진이 없습니다.</p>';
-        } else {
-          recentPhotos.forEach(photo => {
-            const photoCard = createPhotoCard(photo);
-            photoGrid.appendChild(photoCard);
-          });
-        }
-      } catch (e) {
-        console.error('사진 데이터 로드 실패:', e);
-        photoGrid.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 40px;">사진을 불러오는 중 오류가 발생했습니다.</p>';
+    const IMGBB_KEY = "ee1e38cf23a8ac3daf5a2dca469763ab";
+
+    // 데이터 관리
+
+    const grid = document.getElementById('grid');
+    const cardTmpl = document.getElementById('cardTmpl');
+    const q = document.getElementById('q');
+    const addMember = document.getElementById('addMember');
+    
+    // 검색 토글 관련 요소들
+    const searchToggle = document.getElementById('searchToggle');
+    const searchContainer = document.getElementById('searchContainer');
+    
+    // 관리자 권한 확인
+    const ADMIN_KEY = "admin.authenticated";
+    const isAdmin = localStorage.getItem(ADMIN_KEY) === 'true';
+
+    async function loadMembers(){
+      try{
+        return await dataManager.loadMembers();
+      }catch(e){ 
+        console.error('길드원 로드 실패:', e);
+        return []; 
       }
     }
     
-    function createPhotoCard(photo) {
-      const card = document.createElement('div');
-      card.className = 'photo-card';
-      card.innerHTML = `
-        <div class="photo-thumb">
-          <img src="${photo.url}" alt="${photo.title}" loading="lazy">
-        </div>
-        <div class="photo-meta">
-          <h3 class="photo-title">${utils.escapeHtml(photo.title)}</h3>
-          <div class="photo-info">
-            <span>${utils.escapeHtml(photo.author || '')}</span>
-            <span>${utils.formatDate(photo.updatedAt || photo.createdAt)}</span>
-          </div>
-        </div>
-      `;
-      return card;
+    function fmtDate(ts){ 
+      return utils.formatDate(ts); 
     }
     
-    // 길드원 데이터 로드 및 표시
-    async function loadMemberPreview() {
-      const memberGrid = document.getElementById('memberGrid');
-      
-      try {
-        // 캐시를 강제로 새로고침하여 최신 데이터 보장
-        dataManager.clearCache();
-        const members = await dataManager.loadMembers();
-        const recentMembers = members
-          .filter(member => member.status === 'active')
-          .slice(0, 8);
+    function escapeHtml(s){ 
+      return utils.escapeHtml(s); 
+    }
+
+    async function render(filter=""){
+      // 캐시를 강제로 새로고침하여 최신 데이터 보장
+      dataManager.clearCache();
+      const members = await loadMembers();
+      const term = filter.trim().toLowerCase();
+      const filtered = term ? members.filter(m=>{
+        return [m.name,m.role].join(" ").toLowerCase().includes(term);
+      }) : members;
+
+      grid.innerHTML = "";
+      for(const m of filtered){
+        const node = cardTmpl.content.cloneNode(true);
+        const card = node.querySelector('.card');
+        const cover = node.querySelector('.cover');
+        const coverPlaceholder = node.querySelector('.cover-placeholder');
+        const ttl = node.querySelector('.title');
+        const sub = node.querySelector('.sub');
+        const link = node.querySelector('.link');
+        const coverUploadIcon = node.querySelector('.cover-upload-icon');
+        const coverFileInput = node.querySelector('.cover-file-input');
+        const coverUploadBtn = node.querySelector('.cover-upload-btn');
+
+        ttl.textContent = m.name;
+        sub.textContent = m.role || "길드원";
         
-        if (recentMembers.length === 0) {
-          memberGrid.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 40px;">등록된 길드원이 없습니다.</p>';
+        // 개별 멤버의 커버 이미지 사용 (없으면 기본 이미지)
+        if (m.cover) {
+          // 커버 이미지가 있는 경우
+          cover.style.backgroundImage = `url('${m.cover}')`;
+          coverPlaceholder.style.display = 'none'; // "커버 없음" 텍스트 숨김
         } else {
-          recentMembers.forEach(member => {
-            const memberCard = createMemberCard(member);
-            memberGrid.appendChild(memberCard);
-          });
+          // 커버 이미지가 없는 경우 기본 이미지 사용
+          cover.style.backgroundImage = `url('img/cover.webp')`;
+          coverPlaceholder.style.display = 'block'; // "커버 없음" 텍스트 표시
         }
-      } catch (e) {
-        console.error('길드원 데이터 로드 실패:', e);
-        memberGrid.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 40px;">길드원 정보를 불러오는 중 오류가 발생했습니다.</p>';
+        
+        // 관리자 권한에 따른 커버 업로드 아이콘 표시
+        if (isAdmin) {
+          coverUploadIcon.style.display = 'block';
+        }
+
+        // 커버 업로드 동작
+        coverUploadBtn.onclick = () => {
+          coverFileInput.click();
+        };
+
+        coverFileInput.onchange = async (e) => {
+          const f = e.target.files?.[0];
+          if(!f){ return; }
+          
+          coverUploadBtn.disabled = true; 
+          coverUploadBtn.textContent = "업로드 중…";
+          
+          try{
+            const fd = new FormData(); 
+            fd.append("image", f);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:"POST",body:fd});
+            if(!res.ok) throw new Error("ImgBB 업로드 실패");
+            const data = await res.json();
+            const url = data?.data?.url || data?.data?.display_url;
+            if(!url) throw new Error("응답 파싱 실패");
+
+            // 길드원 커버 업데이트
+            const success = await dataManager.updateMember(m.id, { cover: url });
+            if (success) {
+              m.cover = url;
+              // 커버 이미지 업데이트
+              cover.style.backgroundImage = `url('${url}')`;
+              coverPlaceholder.style.display = 'none'; // "커버 없음" 텍스트 숨김
+              coverUploadIcon.style.display = 'none';
+              
+              // 사진첩에도 동일 아이템으로 추가
+              const photoData = {
+                url,
+                title: `${m.name} 커버 이미지`,
+                subtitle: "길드원 커버",
+                author: m.name,
+                tags: ["길드", "커버"]
+              };
+              await dataManager.addPhoto(photoData);
+              
+              // 카드의 최근 링크 표기
+              link.href = url; 
+              link.style.display="inline-block"; 
+              link.textContent = "원본";
+
+              alert("커버 이미지가 업로드되었습니다!");
+            } else {
+              alert("커버 업데이트에 실패했습니다.");
+            }
+          }catch(err){
+            alert(err.message);
+          }finally{
+            coverUploadBtn.disabled=false; 
+            coverUploadBtn.textContent="📷";
+            coverFileInput.value = '';
+          }
+        };
+
+
+        grid.appendChild(node);
       }
     }
-    
-    function createMemberCard(member) {
-      const card = document.createElement('div');
-      card.className = 'member-card';
-      
-      // 커버 이미지 설정 (members.html과 동일)
-      const coverStyle = member.cover ? 
-        `background-image: url('${member.cover}')` : 
-        `background-image: url('img/cover.webp')`;
-      
-      // 태그 생성
-      const tagsHtml = member.tags && member.tags.length > 0 ? 
-        member.tags.map(tag => `<span class="member-tag">${utils.escapeHtml(tag)}</span>`).join('') : 
-        '';
-      
-      card.innerHTML = `
-        <div class="member-cover" style="${coverStyle}">
-        </div>
-        <div class="member-info">
-          <h3 class="member-name">${utils.escapeHtml(member.name)}</h3>
-          <p class="member-role">${utils.escapeHtml(member.role || '길드원')}</p>
-          ${tagsHtml ? `<div class="member-tags">${tagsHtml}</div>` : ''}
-        </div>
-      `;
-      return card;
+
+    // 검색 토글 기능
+    function toggleSearch() {
+      searchContainer.classList.toggle('search-collapsed');
+      if (searchContainer.classList.contains('search-collapsed')) {
+        searchToggle.textContent = '🔍';
+        searchToggle.title = '검색';
+        searchToggle.classList.remove('close-btn');
+        q.value = '';
+        render('');
+      } else {
+        searchToggle.textContent = '';
+        searchToggle.title = '검색 닫기';
+        searchToggle.classList.add('close-btn');
+        q.focus();
+      }
     }
-    
-    // 페이지 초기화
-    async function initializePage() {
+
+    // 검색 토글 버튼 이벤트
+    searchToggle.addEventListener('click', toggleSearch);
+
+    // 관리자 권한에 따른 UI 표시
+    if (isAdmin) {
+      addMember.style.display = 'inline-block';
+    }
+
+    // 검색
+    q.addEventListener('input', async ()=>await render(q.value));
+
+    // 길드원 추가 (관리자만)
+    addMember.onclick = async ()=>{
+      if (!isAdmin) return;
+      const name = prompt("길드원 이름"); if(!name) return;
+      const role = prompt("직책/상태(예: 길드원, 밤샘, 새벽, 저녁 등)") || "길드원";
+      
       try {
-        await Promise.all([
-          loadPhotoPreview(),
-          loadMemberPreview()
-        ]);
-        console.log('NBTI 길드 메인 페이지가 로드되었습니다.');
+        const memberData = {
+          name,
+          role,
+          cover: "",
+          avatar: name.charAt(0),
+          description: `${role}`
+        };
+        
+        await dataManager.addMember(memberData);
+        await render(q.value);
       } catch (error) {
-        console.error('페이지 초기화 중 오류:', error);
+        console.error('길드원 추가 오류:', error);
+        alert('길드원 추가에 실패했습니다.');
       }
-    }
-    
+    };
+
+
     // 헤더 이벤트 초기화 함수
     function initHeaderEvents() {
       // 현재 페이지 감지 및 활성 상태 설정
@@ -272,17 +358,6 @@
         if (link.getAttribute('data-page') === currentPage) {
           link.classList.add('active');
         }
-        
-        // 네비게이션 링크 클릭 이벤트 추가
-        link.addEventListener('click', (e) => {
-          console.log('네비게이션 링크 클릭됨:', link.textContent, link.href);
-          // 기본 동작을 막지 않고 페이지 이동 허용
-        });
-        
-        // 마우스 이벤트도 추가
-        link.addEventListener('mousedown', (e) => {
-          console.log('네비게이션 링크 마우스다운:', link.textContent);
-        });
       });
       
       // 모바일 사이드바 네비게이션
@@ -292,8 +367,6 @@
           link.classList.add('active');
         }
       });
-      
-      console.log('네비게이션 활성 상태 설정 완료, 현재 페이지:', currentPage);
     }
 
     // 모바일 메뉴 기능
@@ -304,10 +377,7 @@
       const sidebarClose = document.getElementById('sidebarClose');
       const sidebarLinks = document.querySelectorAll('.sidebar-link');
 
-      if (!mobileMenuBtn || !mobileSidebar || !mobileSidebarOverlay) {
-        console.error('모바일 메뉴 요소를 찾을 수 없습니다');
-        return;
-      }
+      if (!mobileMenuBtn || !mobileSidebar || !mobileSidebarOverlay) return;
 
       // 사이드바 열기
       function openSidebar() {
@@ -336,8 +406,6 @@
 
       // 오버레이 클릭 시 닫기
       mobileSidebarOverlay.addEventListener('click', closeSidebar);
-
-      console.log('모바일 메뉴 이벤트 리스너 연결 완료');
     }
 
     // 로그인 모달 관련 변수
@@ -469,12 +537,22 @@
       }
     }
 
-    // 페이지 로드 시 실행
-    document.addEventListener('DOMContentLoaded', () => {
-      initHeaderEvents();
-      initializePage();
-      checkLoginStatus();
-    });
+    // 페이지 초기화
+    async function initializePage() {
+      try {
+        await render();
+        checkLoginStatus();
+        console.log('길드원 페이지가 로드되었습니다.');
+      } catch (error) {
+        console.error('페이지 초기화 중 오류:', error);
+      }
+    }
+    
+    // 헤더 이벤트 초기화
+    initHeaderEvents();
+    
+    // 페이지 초기화
+    initializePage();
   </script>
 </body>
 </html>

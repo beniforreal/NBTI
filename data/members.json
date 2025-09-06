@@ -1,0 +1,111 @@
+{
+  "members": [
+    {
+      "id": "member-001",
+      "name": "작은음표",
+      "role": "길드마스터",
+      "cover": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
+      "avatar": "라",
+      "joinDate": 1704067200000,
+      "status": "active",
+      "description": "NBTI 길드의 길드마스터",
+      "tags": ["길드마스터", "리더", "던전"],
+      "loginId": "smallnote",
+      "password": "guildmaster123",
+      "email": "smallnote@nbti.com",
+      "lastLogin": 0,
+      "profile": {
+        "bio": "NBTI 길드의 길드마스터입니다. 함께 즐거운 게임을 해요!",
+        "interests": ["던전", "레이드", "길드 관리"],
+        "gameLevel": 60,
+        "favoriteActivity": "던전 공략"
+      }
+    },
+    {
+      "id": "member-002",
+      "name": "아쉬운데잉",
+      "role": "부길드장",
+      "cover": "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=250&fit=crop",
+      "avatar": "아",
+      "joinDate": 1703980800000,
+      "status": "active",
+      "description": "부길드장",
+      "tags": ["부길드장", "서포터", "정모"],
+      "loginId": "ashy",
+      "password": "ashy123",
+      "email": "ashy@nbti.com",
+      "lastLogin": 0,
+      "profile": {
+        "bio": "부길드장으로 길드원들을 도와드립니다!",
+        "interests": ["정모", "친목", "서포터"],
+        "gameLevel": 58,
+        "favoriteActivity": "길드원들과의 정모"
+      }
+    },
+    {
+      "id": "member-003",
+      "name": "돌하나",
+      "role": "부길드장",
+      "cover": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop",
+      "avatar": "돌",
+      "joinDate": 1703894400000,
+      "status": "active",
+      "description": "부길드장",
+      "tags": ["부길드장", "레이드", "친목"],
+      "loginId": "dol",
+      "password": "dol123",
+      "email": "dol@nbti.com",
+      "lastLogin": 0,
+      "profile": {
+        "bio": "부길드장으로 활발하게 활동합니다!",
+        "interests": ["레이드", "친목", "게임"],
+        "gameLevel": 55,
+        "favoriteActivity": "레이드 파티"
+      }
+    },
+    {
+      "id": "member-004",
+      "name": "전사도로롱",
+      "role": "부길드장",
+      "cover": "",
+      "avatar": "전",
+      "joinDate": 1703808000000,
+      "status": "active",
+      "description": "부길드장",
+      "tags": ["부길드장", "전사", "친화력"],
+      "loginId": "doro",
+      "password": "doro123",
+      "email": "doro@nbti.com",
+      "lastLogin": 0,
+      "profile": {
+        "bio": "전사 부길드장입니다. 잘 부탁드려요!",
+        "interests": ["전사", "게임", "학습"],
+        "gameLevel": 45,
+        "favoriteActivity": "길드원들과의 대화"
+      }
+    },
+    {
+      "id": "member-005",
+      "name": "이시후",
+      "role": "길드원",
+      "cover": "",
+      "avatar": "이",
+      "joinDate": 1703721600000,
+      "status": "active",
+      "description": "길드원",
+      "tags": ["길드원", "게임", "커뮤니티"],
+      "loginId": "sihu",
+      "password": "sihu123",
+      "email": "sihu@nbti.com",
+      "lastLogin": 0,
+      "profile": {
+        "bio": "게임과 커뮤니티 활동을 좋아하는 길드원입니다.",
+        "interests": ["게임", "커뮤니티", "친목"],
+        "gameLevel": 52,
+        "favoriteActivity": "커뮤니티 활동"
+      }
+    }
+  ],
+  "lastUpdated": 1704067200003,
+  "version": "1.0"
+}

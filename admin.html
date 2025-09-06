@@ -5,59 +5,55 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>관리자 페이지</title>
   <meta name="color-scheme" content="dark light">
-  <style>
-    :root{
-      --bg:#141a1f; --panel:#1c242b; --panel-2:#202a33; --text:#dfe7ef; --muted:#93a1ad; --accent:#7dd3fc; --ok:#9ae6b4; --warn:#f6ad55; --danger:#feb2b2; --radius:14px;
-    }
-    html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Pretendard,Helvetica,Arial;}
-    a{color:var(--accent);text-decoration:none}
-    .wrap{max-width:600px;margin:50px auto;padding:0 18px}
-    .login-card{background:var(--panel);border:1px solid #2a3640;border-radius:var(--radius);padding:40px;text-align:center}
-    .login-title{font-size:28px;font-weight:700;margin:0 0 20px;color:var(--accent)}
-    .login-subtitle{color:var(--muted);margin:0 0 30px;font-size:16px}
-    .form-group{margin:20px 0}
-    .form-label{display:block;margin-bottom:8px;font-weight:600;color:var(--text)}
-    .form-input{width:100%;padding:12px 16px;background:#0f1418;color:var(--text);border:1px solid #2a3640;border-radius:10px;font-size:16px;box-sizing:border-box}
-    .form-input:focus{outline:none;border-color:var(--accent)}
-    .btn{background:var(--accent);color:#000;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:16px;font-weight:600;width:100%;margin:20px 0}
-    .btn:hover{filter:brightness(1.1)}
-    .btn-secondary{background:var(--panel-2);color:var(--text);border:1px solid #2b3843}
-    .btn-secondary:hover{filter:brightness(1.1)}
-    .error{color:var(--danger);margin:10px 0;font-size:14px}
-    .success{color:var(--ok);margin:10px 0;font-size:14px}
-    .admin-links{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
-    .admin-link{background:var(--panel-2);border:1px solid #2a3640;border-radius:10px;padding:20px;text-align:center;text-decoration:none;color:var(--text);transition:all 0.2s}
-    .admin-link:hover{background:var(--panel);border-color:var(--accent)}
-    .admin-link h3{margin:0 0 8px;color:var(--accent)}
-    .admin-link p{margin:0;color:var(--muted);font-size:13px}
-    .logout-btn{position:absolute;top:20px;right:20px;background:var(--danger);color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px}
-    .logout-btn:hover{filter:brightness(1.1)}
-    
-    /* 삭제 확인 모달 */
-    .delete-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
-    .delete-content{background:var(--panel);border-radius:16px;max-width:400px;width:100%;border:1px solid #2a3640;padding:0}
-    .delete-header{padding:20px 24px;border-bottom:1px solid #2a3640;text-align:center}
-    .delete-title{font-size:20px;font-weight:700;margin:0;color:var(--danger)}
-    .delete-body{padding:24px;text-align:center}
-    .delete-message{color:var(--text);margin:0 0 20px;line-height:1.5}
-    .delete-actions{display:flex;gap:12px;justify-content:center}
-    .delete-actions .btn{min-width:100px}
-    .btn-danger{background:var(--danger);color:white}
-    .btn-danger:hover{filter:brightness(1.1)}
-    .btn-cancel{background:var(--panel-2);color:var(--text);border:1px solid #2b3843}
-    .btn-cancel:hover{filter:brightness(1.1)}
-    
-    /* 반응형 */
-    @media (max-width: 768px) {
-      .wrap{padding:0 12px;margin:30px auto}
-      .login-card{padding:30px 20px}
-      .login-title{font-size:24px}
-      .admin-links{grid-template-columns:1fr}
-    }
-  </style>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./js/data-manager.js"></script>
 </head>
 <body>
-  <div class="wrap">
+  <!-- 상단 헤더 -->
+  <header class="main-header">
+    <div class="header-content">
+      <a href="./index.html" class="logo">
+        <h1>🏰 NBTI 길드</h1>
+      </a>
+      <nav class="header-nav">
+        <a href="./picture.html" class="nav-link" data-page="picture">
+          <img src="./img/camera.png" alt="카메라" class="nav-icon">
+          사진첩
+        </a>
+        <a href="./members.html" class="nav-link" data-page="members">👥 길드원</a>
+        <a href="./admin.html" class="nav-link" data-page="admin">🔐 관리자</a>
+        <button class="header-logout" id="headerLogout">로그아웃</button>
+      </nav>
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 모바일 사이드바 오버레이 -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+
+  <!-- 모바일 사이드바 -->
+  <div class="mobile-sidebar" id="mobileSidebar">
+    <div class="sidebar-header">
+      <a href="./index.html" class="sidebar-logo">
+        <h2>🏰 NBTI 길드</h2>
+      </a>
+      <button class="sidebar-close" id="sidebarClose">&times;</button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="./picture.html" class="sidebar-link" data-page="picture">
+        <img src="./img/camera.png" alt="카메라" class="sidebar-icon">
+        사진첩
+      </a>
+      <a href="./members.html" class="sidebar-link" data-page="members">👥 길드원</a>
+      <a href="./admin.html" class="sidebar-link" data-page="admin">🔐 관리자</a>
+    </nav>
+  </div>
+
+  <div class="admin-wrap">
     <div id="loginSection" class="login-card">
       <h1 class="login-title">🔐 관리자 로그인</h1>
       <p class="login-subtitle">NBTI 길드 사진첩 관리자 페이지</p>
@@ -67,7 +63,7 @@
           <label class="form-label" for="password">비밀번호</label>
           <input type="password" id="password" class="form-input" placeholder="관리자 비밀번호를 입력하세요" required>
         </div>
-        <button type="submit" class="btn">로그인</button>
+        <button type="submit" class="admin-btn">로그인</button>
         <div id="errorMsg" class="error" style="display:none"></div>
       </form>
     </div>
@@ -82,17 +78,24 @@
           <h3>📷 사진첩 관리</h3>
           <p>사진 업로드, 수정, 삭제</p>
         </a>
-        <a href="./guild.html" class="admin-link">
+        <a href="./members.html" class="admin-link">
           <h3>👥 길드원 관리</h3>
           <p>길드원 추가, 삭제, 업로드</p>
         </a>
       </div>
       
-      <div style="margin-top:30px;padding:20px;background:#0f1418;border-radius:10px;border:1px solid #2a3640">
-        <h3 style="margin:0 0 15px;color:var(--accent)">📊 현재 상태</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
-          <div>사진 개수: <span id="photoCount" style="color:var(--ok)">0</span></div>
-          <div>길드원 수: <span id="memberCount" style="color:var(--ok)">0</span></div>
+      <div class="admin-members-section">
+        <h3>👥 길드원 관리</h3>
+        <div class="members-list" id="membersList">
+          <!-- 길드원 목록이 여기에 동적으로 추가됩니다 -->
+        </div>
+      </div>
+      
+      <div class="admin-status">
+        <h3>📊 현재 상태</h3>
+        <div class="admin-stats">
+          <div>사진 개수: <span id="photoCount">0</span></div>
+          <div>길드원 수: <span id="memberCount">0</span></div>
         </div>
       </div>
     </div>
@@ -107,9 +110,39 @@
       <div class="delete-body">
         <p id="deleteMessage" class="delete-message">정말로 삭제하시겠습니까?</p>
         <div class="delete-actions">
-          <button id="deleteCancel" class="btn btn-cancel">취소</button>
-          <button id="deleteConfirm" class="btn btn-danger">삭제</button>
+          <button id="deleteCancel" class="admin-btn btn-cancel">취소</button>
+          <button id="deleteConfirm" class="admin-btn btn-danger">삭제</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 길드원 수정 모달 -->
+  <div id="editMemberModal" class="edit-modal">
+    <div class="edit-content">
+      <div class="edit-header">
+        <h2 class="edit-title">✏️ 길드원 정보 수정</h2>
+        <button id="editClose" class="edit-close">&times;</button>
+      </div>
+      <div class="edit-body">
+        <form id="editMemberForm">
+          <div class="form-group">
+            <label class="form-label" for="editName">닉네임</label>
+            <input type="text" id="editName" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editRole">직책</label>
+            <input type="text" id="editRole" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDescription">설명</label>
+            <textarea id="editDescription" class="form-input" rows="3"></textarea>
+          </div>
+          <div class="edit-actions">
+            <button type="button" id="editCancel" class="admin-btn btn-cancel">취소</button>
+            <button type="submit" class="admin-btn">수정</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -222,14 +255,27 @@
     const passwordInput = document.getElementById('password');
     const errorMsg = document.getElementById('errorMsg');
     const logoutBtn = document.getElementById('logoutBtn');
+    const headerLogout = document.getElementById('headerLogout');
     const photoCount = document.getElementById('photoCount');
     const memberCount = document.getElementById('memberCount');
+    const membersList = document.getElementById('membersList');
     
     // 삭제 모달 요소들
     const deleteModal = document.getElementById('deleteModal');
     const deleteMessage = document.getElementById('deleteMessage');
     const deleteCancel = document.getElementById('deleteCancel');
     const deleteConfirm = document.getElementById('deleteConfirm');
+    
+    // 수정 모달 요소들
+    const editMemberModal = document.getElementById('editMemberModal');
+    const editMemberForm = document.getElementById('editMemberForm');
+    const editName = document.getElementById('editName');
+    const editRole = document.getElementById('editRole');
+    const editDescription = document.getElementById('editDescription');
+    const editClose = document.getElementById('editClose');
+    const editCancel = document.getElementById('editCancel');
+    
+    let currentEditingMember = null;
 
     // 세션 유효성 검사
     function isSessionValid() {
@@ -246,9 +292,11 @@
     }
     
     // 관리자 인증 확인
-    function checkAdminAuth() {
+    async function checkAdminAuth() {
+      console.log('checkAdminAuth 호출됨');
       // IP 락 확인
       if (isIPLocked()) {
+        console.log('IP가 락됨');
         showLockedMessage();
         return;
       }
@@ -256,13 +304,18 @@
       const isAuthenticated = localStorage.getItem(ADMIN_KEY) === 'true';
       const sessionValid = isSessionValid();
       
+      console.log('인증 상태:', isAuthenticated, '세션 유효:', sessionValid);
+      
       if (isAuthenticated && sessionValid) {
-        showAdminSection();
+        console.log('관리자 인증됨, 관리자 섹션 표시');
+        await showAdminSection();
       } else {
         // 세션 만료 시 자동 로그아웃
         if (isAuthenticated && !sessionValid) {
+          console.log('세션 만료, 로그아웃');
           logout();
         }
+        console.log('로그인 섹션 표시');
         showLoginSection();
       }
     }
@@ -288,52 +341,139 @@
 
     // 로그인 섹션 표시
     function showLoginSection() {
-      loginSection.innerHTML = `
-        <h1 class="login-title">🔐 관리자 로그인</h1>
-        <p class="login-subtitle">NBTI 길드 사진첩 관리자 페이지</p>
-        
-        <form id="loginForm">
-          <div class="form-group">
-            <label class="form-label" for="password">비밀번호</label>
-            <input type="password" id="password" class="form-input" placeholder="관리자 비밀번호를 입력하세요" required>
-          </div>
-          <button type="submit" class="btn">로그인</button>
-          <div id="errorMsg" class="error" style="display:none"></div>
-        </form>
-      `;
-      
-      // 이벤트 리스너 재등록
-      const newForm = document.getElementById('loginForm');
-      const newPasswordInput = document.getElementById('password');
-      const newErrorMsg = document.getElementById('errorMsg');
-      
-      newForm.addEventListener('submit', handleLogin);
-      
+      // 기존 로그인 섹션을 다시 표시
+      loginSection.style.display = 'block';
       adminSection.style.display = 'none';
+      headerLogout.classList.remove('show');
+      
+      // 에러 메시지 숨기기
+      const errorMsg = document.getElementById('errorMsg');
+      if (errorMsg) {
+        errorMsg.style.display = 'none';
+      }
+      
+      // 비밀번호 입력 필드 초기화
+      const passwordInput = document.getElementById('password');
+      if (passwordInput) {
+        passwordInput.value = '';
+      }
     }
 
     // 관리자 섹션 표시
-    function showAdminSection() {
+    async function showAdminSection() {
+      console.log('showAdminSection 호출됨');
       loginSection.style.display = 'none';
       adminSection.style.display = 'block';
-      updateStats();
+      headerLogout.classList.add('show');
+      console.log('헤더 로그아웃 버튼 클래스:', headerLogout.className);
+      await updateStats();
+      await loadMembersList();
     }
 
     // 통계 업데이트
-    function updateStats() {
+    async function updateStats() {
       try {
-        const photos = JSON.parse(localStorage.getItem('album.items.v1') || '[]');
-        const members = JSON.parse(localStorage.getItem('guild.members.v1') || '[]');
-        photoCount.textContent = photos.length;
-        memberCount.textContent = members.length;
+        // 캐시를 강제로 새로고침하여 최신 데이터 보장
+        dataManager.clearCache();
+        const stats = await dataManager.getStats();
+        photoCount.textContent = stats.photoCount;
+        memberCount.textContent = stats.memberCount;
       } catch (e) {
+        console.error('통계 업데이트 실패:', e);
         photoCount.textContent = '0';
         memberCount.textContent = '0';
       }
     }
 
+    // 길드원 목록 로드
+    async function loadMembersList() {
+      try {
+        // 캐시를 강제로 새로고침하여 최신 데이터 보장
+        dataManager.clearCache();
+        const members = await dataManager.loadMembers();
+        membersList.innerHTML = '';
+        
+        if (members.length === 0) {
+          membersList.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 20px;">등록된 길드원이 없습니다.</p>';
+          return;
+        }
+        
+        members.forEach(member => {
+          const memberItem = document.createElement('div');
+          memberItem.className = 'member-item';
+          memberItem.innerHTML = `
+            <div class="member-info">
+              <div class="member-avatar-small">${member.avatar || member.name.charAt(0)}</div>
+              <div class="member-details">
+                <h4 class="member-name">${utils.escapeHtml(member.name)}</h4>
+                <p class="member-role">${utils.escapeHtml(member.role)}</p>
+                <p class="member-description">${utils.escapeHtml(member.description || '')}</p>
+              </div>
+            </div>
+            <div class="member-actions">
+              <button class="btn-edit" data-id="${member.id}">수정</button>
+              <button class="btn-delete" data-id="${member.id}">삭제</button>
+            </div>
+          `;
+          membersList.appendChild(memberItem);
+        });
+        
+        // 이벤트 리스너 추가
+        membersList.querySelectorAll('.btn-edit').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const memberId = e.target.getAttribute('data-id');
+            const member = members.find(m => m.id === memberId);
+            if (member) {
+              openEditModal(member);
+            }
+          });
+        });
+        
+        membersList.querySelectorAll('.btn-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const memberId = e.target.getAttribute('data-id');
+            const member = members.find(m => m.id === memberId);
+            if (member) {
+              showDeleteModal(
+                `정말로 '${member.name}' 길드원을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+                async () => {
+                  const success = await dataManager.deleteMember(memberId);
+                  if (success) {
+                    await loadMembersList();
+                    await updateStats();
+                  } else {
+                    alert('삭제에 실패했습니다.');
+                  }
+                }
+              );
+            }
+          });
+        });
+        
+      } catch (error) {
+        console.error('길드원 목록 로드 실패:', error);
+        membersList.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">길드원 목록을 불러오는 중 오류가 발생했습니다.</p>';
+      }
+    }
+
+    // 수정 모달 열기
+    function openEditModal(member) {
+      currentEditingMember = member;
+      editName.value = member.name;
+      editRole.value = member.role;
+      editDescription.value = member.description || '';
+      editMemberModal.style.display = 'flex';
+    }
+
+    // 수정 모달 닫기
+    function closeEditModal() {
+      editMemberModal.style.display = 'none';
+      currentEditingMember = null;
+      editMemberForm.reset();
+    }
+
     // 로그인 처리 함수
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       const passwordInput = document.getElementById('password');
       const errorMsg = document.getElementById('errorMsg');
@@ -342,6 +482,7 @@
       
       if (passwordHash === ADMIN_PASSWORD_HASH) {
         // 인증 성공
+        console.log('로그인 성공!');
         localStorage.setItem(ADMIN_KEY, 'true');
         clearIPAttempts(); // 성공 시 시도 횟수 초기화
         
@@ -353,7 +494,7 @@
         };
         localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
         
-        showAdminSection();
+        await showAdminSection();
       } else {
         // 실패 시 IP 기반 락 처리
         const attempts = addIPAttempt();
@@ -443,6 +584,47 @@
       if (e.key === 'Escape' && deleteModal.style.display === 'flex') {
         hideDeleteModal();
       }
+      if (e.key === 'Escape' && editMemberModal.style.display === 'flex') {
+        closeEditModal();
+      }
+    });
+
+    // 수정 폼 제출
+    editMemberForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!currentEditingMember) return;
+      
+      try {
+        const updateData = {
+          name: editName.value.trim(),
+          role: editRole.value.trim(),
+          description: editDescription.value.trim(),
+          avatar: editName.value.trim().charAt(0)
+        };
+        
+        const success = await dataManager.updateMember(currentEditingMember.id, updateData);
+        if (success) {
+          closeEditModal();
+          await loadMembersList();
+          await updateStats();
+          // 수정 성공 메시지는 dataManager에서 처리됨
+        } else {
+          alert('수정에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('길드원 수정 오류:', error);
+        alert('수정 중 오류가 발생했습니다.');
+      }
+    });
+
+    // 수정 모달 이벤트
+    editClose.addEventListener('click', closeEditModal);
+    editCancel.addEventListener('click', closeEditModal);
+    editMemberModal.addEventListener('click', (e) => {
+      if (e.target === editMemberModal) {
+        closeEditModal();
+      }
     });
     
     // 전역 함수로 노출 (개발자 도구에서 사용 가능)
@@ -457,7 +639,99 @@
       showLoginSection();
     });
 
+    // 헤더 로그아웃 버튼
+    headerLogout.addEventListener('click', () => {
+      logout();
+      showLoginSection();
+    });
+
+    // 헤더 이벤트 초기화 함수
+    function initHeaderEvents() {
+      // 현재 페이지 감지 및 활성 상태 설정
+      const currentPage = getCurrentPage();
+      setActiveNav(currentPage);
+      
+      // 모바일 메뉴 기능
+      initMobileMenu();
+    }
+
+    // 현재 페이지 감지
+    function getCurrentPage() {
+      const path = window.location.pathname;
+      if (path.includes('index.html') || path === '/' || path.endsWith('/')) return 'index';
+      if (path.includes('picture.html')) return 'picture';
+      if (path.includes('members.html')) return 'members';
+      if (path.includes('mypage.html')) return 'mypage';
+      if (path.includes('admin.html')) return 'admin';
+      return 'index';
+    }
+
+    // 활성 네비게이션 설정
+    function setActiveNav(currentPage) {
+      // 데스크톱 네비게이션
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-page') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+      
+      // 모바일 사이드바 네비게이션
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-page') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    // 모바일 메뉴 기능
+    function initMobileMenu() {
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileSidebar = document.getElementById('mobileSidebar');
+      const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+      const sidebarClose = document.getElementById('sidebarClose');
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+      if (!mobileMenuBtn || !mobileSidebar || !mobileSidebarOverlay) return;
+
+      // 사이드바 열기
+      function openSidebar() {
+        mobileSidebar.classList.add('active');
+        mobileSidebarOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      // 사이드바 닫기
+      function closeSidebar() {
+        mobileSidebar.classList.remove('active');
+        mobileSidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      // 햄버거 메뉴 클릭
+      mobileMenuBtn.addEventListener('click', openSidebar);
+
+      // 사이드바 닫기 버튼 클릭
+      sidebarClose.addEventListener('click', closeSidebar);
+
+      // 사이드바 링크 클릭 시 닫기
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', closeSidebar);
+      });
+
+      // 오버레이 클릭 시 닫기
+      mobileSidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // 초기 로그인 폼 이벤트 리스너 등록
+    const initialLoginForm = document.getElementById('loginForm');
+    if (initialLoginForm) {
+      initialLoginForm.addEventListener('submit', handleLogin);
+    }
+
     // 초기 로드
+    initHeaderEvents();
     checkAdminAuth();
     
     // 개발자 도구에서 사용할 수 있는 도움말

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>사진첩</title>
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg:#141a1f; --panel:#1c242b; --panel-2:#202a33; --text:#dfe7ef; --muted:#93a1ad; --accent:#7dd3fc; --ok:#9ae6b4; --warn:#f6ad55; --danger:#feb2b2; --radius:14px;
+    }
+    html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Pretendard,Helvetica,Arial;}
+    a{color:var(--accent);text-decoration:none}
+    .wrap{max-width:1180px;margin:34px auto;padding:0 18px}
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    header h1{font-size:22px;margin:0}
+    .search{margin-left:auto}
+    .search input{background:#0f1418;color:var(--text);border:1px solid #2a3640;border-radius:10px;padding:10px 12px;min-width:220px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 22px}
+    .btn{background:var(--panel-2);border:1px solid #2b3843;color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn:hover{filter:brightness(1.1)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid #2a3640;border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    .thumb{aspect-ratio:16/10;background:#0b0f12;display:flex;align-items:center;justify-content:center}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .meta{padding:12px 14px 14px}
+    .title{font-size:16px;font-weight:700;margin:0 0 2px}
+    .sub{color:var(--muted);font-size:13px;margin:0 0 8px}
+    .row{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px}
+    .empty{opacity:.7;text-align:center;padding:26px;border:1px dashed #2a3640;border-radius:var(--radius)}
+    .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#0f151a;border:1px solid #2a3640;color:#b6c4cf}
+    footer{opacity:.65;margin:22px 0 6px}
+    /* dialog */
+    dialog{border:none;max-width:560px;width:96%;background:var(--panel);color:var(--text);border-radius:16px;border:1px solid #2a3640;padding:0}
+    .dlg-h{padding:14px 16px;border-bottom:1px solid #2a3640;font-weight:700}
+    .dlg-b{padding:14px 16px;display:grid;gap:10px}
+    .dlg-f{padding:12px 16px;border-top:1px solid #2a3640;display:flex;justify-content:flex-end;gap:8px}
+    input,select,textarea{background:#0f1418;color:var(--text);border:1px solid #2a3640;border-radius:10px;padding:10px 12px;width:100%}
+    label{font-size:12px;color:#9fb1bf}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .danger{background:#2a1010;border-color:#5a1c1c}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>📷 사진첩</h1>
+      <nav class="toolbar">
+        <a class="btn" href="./guild.html">길드원 정리 & 업로드</a>
+        <button class="btn" id="openAdd">사진 업로드</button>
+      </nav>
+      <div class="search">
+        <input id="q" placeholder="검색: 제목/부제/작성자/태그">
+      </div>
+    </header>
+
+    <section id="grid" class="grid"></section>
+    <div id="empty" class="empty" hidden>아직 업로드된 사진이 없습니다. 우측 상단 <b>사진 업로드</b> 버튼을 눌러 추가하세요.</div>
+
+    <footer>로컬 저장소(localStorage)에 메타데이터가 저장됩니다. 이미지는 ImgBB에 업로드됩니다.</footer>
+  </div>
+
+  <!-- 업로드 다이얼로그 -->
+  <dialog id="dlg">
+    <div class="dlg-h">사진 업로드</div>
+    <form method="dialog" id="form">
+      <div class="dlg-b">
+        <div>
+          <label>이미지 파일</label>
+          <input type="file" id="file" accept="image/*" required>
+        </div>
+        <div class="row2">
+          <div><label>제목</label><input id="title" placeholder="예) 한여름 밤의 꿈" required></div>
+          <div><label>부제/장소</label><input id="subtitle" placeholder="예) 클랜 / 서울"></div>
+        </div>
+        <div class="row2">
+          <div><label>작성자</label><input id="author" placeholder="예) 라이티"></div>
+          <div><label>태그(쉼표로 구분)</label><input id="tags" placeholder="예) 길드,모임,이벤트"></div>
+        </div>
+      </div>
+      <div class="dlg-f">
+        <button class="btn" value="cancel">취소</button>
+        <button class="btn" id="submitBtn" value="default">업로드</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const IMGBB_KEY = "ee1e38cf23a8ac3daf5a2dca469763ab";
+
+    const storeKey = "album.items.v1";
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const q = document.getElementById('q');
+    const dlg = document.getElementById('dlg');
+    const openAdd = document.getElementById('openAdd');
+    const form = document.getElementById('form');
+    const file = document.getElementById('file');
+    const titleEl = document.getElementById('title');
+    const subtitleEl = document.getElementById('subtitle');
+    const authorEl = document.getElementById('author');
+    const tagsEl = document.getElementById('tags');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function load(){
+      try{ return JSON.parse(localStorage.getItem(storeKey) || "[]"); }
+      catch(e){ return []; }
+    }
+    function save(items){ localStorage.setItem(storeKey, JSON.stringify(items)); }
+    function fmtDate(ts){
+      const d = new Date(ts); const pad=n=>String(n).padStart(2,'0');
+      return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+    }
+    function render(filter=""){
+      const items = load();
+      const term = filter.trim().toLowerCase();
+      const filtered = term ? items.filter(it=>{
+        const hay = [it.title,it.subtitle,it.author,(it.tags||[]).join(",")].join(" ").toLowerCase();
+        return hay.includes(term);
+      }) : items;
+
+      grid.innerHTML = "";
+      if(filtered.length===0){ empty.hidden=false; return; }
+      empty.hidden=true;
+
+      for(const it of filtered.sort((a,b)=>b.createdAt-a.createdAt)){
+        const card = document.createElement('article'); card.className="card";
+        card.innerHTML = `
+          <div class="thumb">${it.url ? `<img src="${it.url}" alt="">`:""}</div>
+          <div class="meta">
+            <h3 class="title">${escapeHtml(it.title)}</h3>
+            <p class="sub">${escapeHtml(it.subtitle||"")}</p>
+            <div class="row">
+              <span>${escapeHtml(it.author||"")}</span>
+              <span>${fmtDate(it.createdAt)}</span>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+              ${(it.tags||[]).slice(0,6).map(t=>`<span class="pill">${escapeHtml(t)}</span>`).join("")}
+            </div>
+            <div style="margin-top:10px;display:flex;gap:6px">
+              <a class="btn" href="${it.url}" target="_blank">원본 보기</a>
+              <button class="btn danger" data-id="${it.id}">삭제</button>
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      }
+
+      // 삭제 핸들러
+      grid.querySelectorAll('.danger').forEach(btn=>{
+        btn.onclick = () => {
+          const id = btn.getAttribute('data-id');
+          const next = load().filter(it=>it.id!==id);
+          save(next); render(q.value);
+        };
+      });
+    }
+    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]))}
+
+    q.addEventListener('input', ()=>render(q.value));
+    openAdd.addEventListener('click', ()=>{ form.reset(); dlg.showModal(); });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = file.files?.[0];
+      if(!f){ alert("이미지를 선택하세요."); return; }
+      submitBtn.disabled = true; submitBtn.textContent = "업로드 중…";
+
+      try{
+        const fd = new FormData(); fd.append("image", f);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:"POST", body:fd });
+        if(!res.ok) throw new Error("ImgBB 업로드 실패");
+        const data = await res.json();
+        const url = data?.data?.url || data?.data?.display_url;
+        if(!url) throw new Error("응답 파싱 실패");
+
+        const item = {
+          id: crypto.randomUUID(),
+          url,
+          title: titleEl.value.trim(),
+          subtitle: subtitleEl.value.trim(),
+          author: authorEl.value.trim(),
+          tags: (tagsEl.value||"").split(",").map(s=>s.trim()).filter(Boolean),
+          createdAt: Date.now()
+        };
+        const items = load(); items.push(item); save(items);
+        dlg.close(); render(q.value);
+      }catch(err){
+        alert(err.message);
+      }finally{
+        submitBtn.disabled=false; submitBtn.textContent="업로드";
+      }
+    });
+
+
+    // 초기 렌더
+    render();
+
+  </script>
+</body>
+</html>

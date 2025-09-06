@@ -1,0 +1,12 @@
+# 1. 파일 수정 (에디터에서)
+# 2. 변경사항 확인
+git status
+
+# 3. 모든 변경사항 추가
+git add .
+
+# 4. 커밋
+git commit -m "수정 내용 설명"
+
+# 5. GitHub에 업로드
+git push

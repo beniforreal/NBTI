@@ -39,6 +39,64 @@
     label{font-size:12px;color:#9fb1bf}
     .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .danger{background:#2a1010;border-color:#5a1c1c}
+    
+    /* 상세 페이지 모달 */
+    .detail-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+    .detail-content{background:var(--panel);border-radius:16px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid #2a3640}
+    .detail-header{padding:20px 24px;border-bottom:1px solid #2a3640;display:flex;justify-content:space-between;align-items:center}
+    .detail-title{font-size:24px;font-weight:700;margin:0}
+    .detail-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px}
+    .detail-close:hover{color:var(--text)}
+    .detail-body{padding:24px}
+    .detail-image{width:100%;border-radius:12px;margin-bottom:20px;max-height:400px;object-fit:cover}
+    .detail-meta{display:grid;gap:16px}
+    .detail-row{display:flex;gap:12px;align-items:center}
+    .detail-label{font-weight:600;color:var(--accent);min-width:80px}
+    .detail-value{color:var(--text)}
+    .detail-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .detail-actions{display:flex;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid #2a3640}
+    .detail-actions .btn{flex:1}
+    
+    /* 우측 하단 관리자 버튼 */
+    .admin-float{position:fixed;bottom:20px;right:20px;z-index:100}
+    .admin-float .btn{background:var(--accent);color:#000;border:none;padding:12px 16px;border-radius:50px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.3s}
+    .admin-float .btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.4)}
+    
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .wrap{padding:0 12px;margin:20px auto}
+      header{flex-direction:column;gap:12px;align-items:stretch}
+      header h1{font-size:20px;text-align:center}
+      .search{margin-left:0;margin-top:8px}
+      .search input{min-width:100%;width:100%}
+      .toolbar{justify-content:center;margin:12px 0 18px}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+      .row2{grid-template-columns:1fr;gap:8px}
+      dialog{width:98%;max-width:none;margin:10px}
+      .dlg-b{padding:12px}
+      .dlg-f{padding:10px 12px;flex-direction:column}
+      .dlg-f .btn{width:100%;margin:2px 0}
+      .detail-modal{padding:10px}
+      .detail-content{max-height:95vh}
+      .detail-header{padding:16px 20px}
+      .detail-body{padding:20px}
+      .detail-title{font-size:20px}
+      .detail-actions{flex-direction:column}
+      .admin-float{bottom:15px;right:15px}
+      .admin-float .btn{padding:10px 14px;font-size:13px}
+    }
+    
+    @media (max-width: 480px) {
+      .wrap{padding:0 8px;margin:16px auto}
+      header h1{font-size:18px}
+      .grid{grid-template-columns:1fr;gap:10px}
+      .card .meta{padding:10px 12px 12px}
+      .title{font-size:15px}
+      .sub{font-size:12px}
+      .row{flex-direction:column;gap:4px;align-items:flex-start}
+      .btn{padding:8px 10px;font-size:13px}
+      .pill{font-size:10px;padding:1px 6px}
+    }
   </style>
 </head>
 <body>
@@ -47,7 +105,7 @@
       <h1>📷 사진첩</h1>
       <nav class="toolbar">
         <a class="btn" href="./guild.html">길드원 정리 & 업로드</a>
-        <button class="btn" id="openAdd">사진 업로드</button>
+        <button class="btn" id="openAdd" style="display:none">사진 업로드</button>
       </nav>
       <div class="search">
         <input id="q" placeholder="검색: 제목/부제/작성자/태그">
@@ -58,6 +116,11 @@
     <div id="empty" class="empty" hidden>아직 업로드된 사진이 없습니다. 우측 상단 <b>사진 업로드</b> 버튼을 눌러 추가하세요.</div>
 
     <footer>로컬 저장소(localStorage)에 메타데이터가 저장됩니다. 이미지는 ImgBB에 업로드됩니다.</footer>
+  </div>
+
+  <!-- 우측 하단 관리자 버튼 -->
+  <div class="admin-float">
+    <a class="btn" href="./admin.html">🔐 관리자</a>
   </div>
 
   <!-- 업로드 다이얼로그 -->
@@ -79,11 +142,46 @@
         </div>
       </div>
       <div class="dlg-f">
-        <button class="btn" value="cancel">취소</button>
+        <button class="btn" type="button" id="cancelBtn">취소</button>
         <button class="btn" id="submitBtn" value="default">업로드</button>
       </div>
     </form>
   </dialog>
+
+  <!-- 상세 페이지 모달 -->
+  <div id="detailModal" class="detail-modal">
+    <div class="detail-content">
+      <div class="detail-header">
+        <h2 id="detailTitle" class="detail-title"></h2>
+        <button id="detailClose" class="detail-close">&times;</button>
+      </div>
+      <div class="detail-body">
+        <img id="detailImage" class="detail-image" src="" alt="">
+        <div class="detail-meta">
+          <div class="detail-row">
+            <span class="detail-label">부제/장소</span>
+            <span id="detailSubtitle" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">작성자</span>
+            <span id="detailAuthor" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">업로드일</span>
+            <span id="detailDate" class="detail-value"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">태그</span>
+            <div id="detailTags" class="detail-tags"></div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <a id="detailViewOriginal" class="btn" href="" target="_blank">원본 보기</a>
+          <button id="detailDelete" class="btn danger" style="display:none">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const IMGBB_KEY = "ee1e38cf23a8ac3daf5a2dca469763ab";
@@ -101,6 +199,23 @@
     const authorEl = document.getElementById('author');
     const tagsEl = document.getElementById('tags');
     const submitBtn = document.getElementById('submitBtn');
+    
+    // 상세 모달 요소들
+    const detailModal = document.getElementById('detailModal');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailImage = document.getElementById('detailImage');
+    const detailSubtitle = document.getElementById('detailSubtitle');
+    const detailAuthor = document.getElementById('detailAuthor');
+    const detailDate = document.getElementById('detailDate');
+    const detailTags = document.getElementById('detailTags');
+    const detailViewOriginal = document.getElementById('detailViewOriginal');
+    const detailDelete = document.getElementById('detailDelete');
+    const detailClose = document.getElementById('detailClose');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    // 관리자 권한 확인
+    const ADMIN_KEY = "admin.authenticated";
+    const isAdmin = localStorage.getItem(ADMIN_KEY) === 'true';
 
     function load(){
       try{ return JSON.parse(localStorage.getItem(storeKey) || "[]"); }
@@ -126,9 +241,9 @@
       for(const it of filtered.sort((a,b)=>b.createdAt-a.createdAt)){
         const card = document.createElement('article'); card.className="card";
         card.innerHTML = `
-          <div class="thumb">${it.url ? `<img src="${it.url}" alt="">`:""}</div>
+          <div class="thumb" style="cursor:pointer" data-id="${it.id}">${it.url ? `<img src="${it.url}" alt="">`:""}</div>
           <div class="meta">
-            <h3 class="title">${escapeHtml(it.title)}</h3>
+            <h3 class="title" style="cursor:pointer" data-id="${it.id}">${escapeHtml(it.title)}</h3>
             <p class="sub">${escapeHtml(it.subtitle||"")}</p>
             <div class="row">
               <span>${escapeHtml(it.author||"")}</span>
@@ -139,25 +254,146 @@
             </div>
             <div style="margin-top:10px;display:flex;gap:6px">
               <a class="btn" href="${it.url}" target="_blank">원본 보기</a>
-              <button class="btn danger" data-id="${it.id}">삭제</button>
+              ${isAdmin ? `<button class="btn danger" data-id="${it.id}">삭제</button>` : ''}
             </div>
           </div>`;
         grid.appendChild(card);
       }
 
+      // 상세 보기 핸들러 (이미지와 제목 클릭)
+      grid.querySelectorAll('.thumb, .title').forEach(element=>{
+        element.onclick = () => {
+          const id = element.getAttribute('data-id');
+          showDetail(id);
+        };
+      });
+
       // 삭제 핸들러
       grid.querySelectorAll('.danger').forEach(btn=>{
         btn.onclick = () => {
           const id = btn.getAttribute('data-id');
-          const next = load().filter(it=>it.id!==id);
-          save(next); render(q.value);
+          const item = load().find(it => it.id === id);
+          if (!item) return;
+          
+          // admin.html의 삭제 모달 사용
+          if (window.showDeleteModal) {
+            window.showDeleteModal(
+              `정말로 '${item.title}'을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+              () => {
+                const next = load().filter(it=>it.id!==id);
+                save(next); 
+                render(q.value);
+              }
+            );
+          } else {
+            // admin.html이 로드되지 않은 경우 기본 confirm 사용
+            if (confirm(`정말로 '${item.title}'을(를) 삭제하시겠습니까?`)) {
+              const next = load().filter(it=>it.id!==id);
+              save(next); 
+              render(q.value);
+            }
+          }
         };
       });
     }
     function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]))}
 
+    // 상세 페이지 표시 함수
+    function showDetail(id) {
+      const items = load();
+      const item = items.find(it => it.id === id);
+      if (!item) return;
+
+      detailTitle.textContent = item.title;
+      detailImage.src = item.url;
+      detailImage.alt = item.title;
+      detailSubtitle.textContent = item.subtitle || "정보 없음";
+      detailAuthor.textContent = item.author || "정보 없음";
+      detailDate.textContent = fmtDate(item.createdAt);
+      detailViewOriginal.href = item.url;
+      
+      // 태그 표시
+      detailTags.innerHTML = "";
+      if (item.tags && item.tags.length > 0) {
+        item.tags.forEach(tag => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'pill';
+          tagEl.textContent = tag;
+          detailTags.appendChild(tagEl);
+        });
+      } else {
+        detailTags.innerHTML = '<span style="color: var(--muted); font-style: italic;">태그 없음</span>';
+      }
+
+      // 삭제 버튼 이벤트 (관리자만)
+      if (isAdmin) {
+        detailDelete.style.display = 'inline-block';
+        detailDelete.onclick = () => {
+          // admin.html의 삭제 모달 사용
+          if (window.showDeleteModal) {
+            window.showDeleteModal(
+              `정말로 '${item.title}'을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+              () => {
+                const next = load().filter(it => it.id !== id);
+                save(next);
+                render(q.value);
+                detailModal.style.display = 'none';
+              }
+            );
+          } else {
+            // admin.html이 로드되지 않은 경우 기본 confirm 사용
+            if (confirm(`정말 '${item.title}'을(를) 삭제하시겠습니까?`)) {
+              const next = load().filter(it => it.id !== id);
+              save(next);
+              render(q.value);
+              detailModal.style.display = 'none';
+            }
+          }
+        };
+      }
+
+      detailModal.style.display = 'flex';
+    }
+
+    // 모달 닫기 이벤트
+    detailClose.onclick = () => detailModal.style.display = 'none';
+    detailModal.onclick = (e) => {
+      if (e.target === detailModal) detailModal.style.display = 'none';
+    };
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && detailModal.style.display === 'flex') {
+        detailModal.style.display = 'none';
+      }
+    });
+
+    // 관리자 권한에 따른 UI 표시
+    if (isAdmin) {
+      openAdd.style.display = 'inline-block';
+    }
+
     q.addEventListener('input', ()=>render(q.value));
     openAdd.addEventListener('click', ()=>{ form.reset(); dlg.showModal(); });
+
+    // 업로드 모달 닫기 이벤트
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) {
+        dlg.close();
+      }
+    });
+
+    // ESC 키로 업로드 모달 닫기
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dlg.close();
+      }
+    });
+
+    // 취소 버튼 클릭 이벤트
+    cancelBtn.addEventListener('click', () => {
+      dlg.close();
+    });
 
     form.addEventListener('submit', async (e)=>{
       e.preventDefault();
@@ -191,6 +427,75 @@
       }
     });
 
+
+    // 더미 데이터 추가 (디자인 미리보기용)
+    function addDummyData() {
+      const dummyItems = [
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
+          title: "한여름 밤의 꿈",
+          subtitle: "클랜 / 서울",
+          author: "라이티",
+          tags: ["길드", "모임", "이벤트"],
+          createdAt: Date.now() - 86400000 * 2
+        },
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=250&fit=crop",
+          title: "길드 정모",
+          subtitle: "카페 / 강남",
+          author: "코난이-황선",
+          tags: ["정모", "카페", "친목"],
+          createdAt: Date.now() - 86400000 * 5
+        },
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=250&fit=crop",
+          title: "게임 스크린샷",
+          subtitle: "던전 / 레이드",
+          author: "현지",
+          tags: ["게임", "레이드", "스크린샷"],
+          createdAt: Date.now() - 86400000 * 7
+        },
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=250&fit=crop",
+          title: "길드원 모임",
+          subtitle: "온라인 / 디스코드",
+          author: "천사소년네티",
+          tags: ["온라인", "디스코드", "모임"],
+          createdAt: Date.now() - 86400000 * 10
+        },
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=250&fit=crop",
+          title: "새로운 길드원 환영",
+          subtitle: "길드 / 환영식",
+          author: "얼애엘아라",
+          tags: ["환영", "새멤버", "길드"],
+          createdAt: Date.now() - 86400000 * 12
+        },
+        {
+          id: crypto.randomUUID(),
+          url: "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&h=250&fit=crop",
+          title: "길드 이벤트",
+          subtitle: "PvP / 토너먼트",
+          author: "수학책",
+          tags: ["PvP", "토너먼트", "이벤트"],
+          createdAt: Date.now() - 86400000 * 15
+        }
+      ];
+
+      const existingItems = load();
+      if (existingItems.length === 0) {
+        save(dummyItems);
+        console.log("더미 데이터가 추가되었습니다!");
+      }
+    }
+
+    // 더미 데이터 추가
+    addDummyData();
 
     // 초기 렌더
     render();

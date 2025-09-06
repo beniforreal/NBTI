@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>관리자 페이지</title>
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg:#141a1f; --panel:#1c242b; --panel-2:#202a33; --text:#dfe7ef; --muted:#93a1ad; --accent:#7dd3fc; --ok:#9ae6b4; --warn:#f6ad55; --danger:#feb2b2; --radius:14px;
+    }
+    html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Pretendard,Helvetica,Arial;}
+    a{color:var(--accent);text-decoration:none}
+    .wrap{max-width:600px;margin:50px auto;padding:0 18px}
+    .login-card{background:var(--panel);border:1px solid #2a3640;border-radius:var(--radius);padding:40px;text-align:center}
+    .login-title{font-size:28px;font-weight:700;margin:0 0 20px;color:var(--accent)}
+    .login-subtitle{color:var(--muted);margin:0 0 30px;font-size:16px}
+    .form-group{margin:20px 0}
+    .form-label{display:block;margin-bottom:8px;font-weight:600;color:var(--text)}
+    .form-input{width:100%;padding:12px 16px;background:#0f1418;color:var(--text);border:1px solid #2a3640;border-radius:10px;font-size:16px;box-sizing:border-box}
+    .form-input:focus{outline:none;border-color:var(--accent)}
+    .btn{background:var(--accent);color:#000;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-size:16px;font-weight:600;width:100%;margin:20px 0}
+    .btn:hover{filter:brightness(1.1)}
+    .btn-secondary{background:var(--panel-2);color:var(--text);border:1px solid #2b3843}
+    .btn-secondary:hover{filter:brightness(1.1)}
+    .error{color:var(--danger);margin:10px 0;font-size:14px}
+    .success{color:var(--ok);margin:10px 0;font-size:14px}
+    .admin-links{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
+    .admin-link{background:var(--panel-2);border:1px solid #2a3640;border-radius:10px;padding:20px;text-align:center;text-decoration:none;color:var(--text);transition:all 0.2s}
+    .admin-link:hover{background:var(--panel);border-color:var(--accent)}
+    .admin-link h3{margin:0 0 8px;color:var(--accent)}
+    .admin-link p{margin:0;color:var(--muted);font-size:13px}
+    .logout-btn{position:absolute;top:20px;right:20px;background:var(--danger);color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px}
+    .logout-btn:hover{filter:brightness(1.1)}
+    
+    /* 삭제 확인 모달 */
+    .delete-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+    .delete-content{background:var(--panel);border-radius:16px;max-width:400px;width:100%;border:1px solid #2a3640;padding:0}
+    .delete-header{padding:20px 24px;border-bottom:1px solid #2a3640;text-align:center}
+    .delete-title{font-size:20px;font-weight:700;margin:0;color:var(--danger)}
+    .delete-body{padding:24px;text-align:center}
+    .delete-message{color:var(--text);margin:0 0 20px;line-height:1.5}
+    .delete-actions{display:flex;gap:12px;justify-content:center}
+    .delete-actions .btn{min-width:100px}
+    .btn-danger{background:var(--danger);color:white}
+    .btn-danger:hover{filter:brightness(1.1)}
+    .btn-cancel{background:var(--panel-2);color:var(--text);border:1px solid #2b3843}
+    .btn-cancel:hover{filter:brightness(1.1)}
+    
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .wrap{padding:0 12px;margin:30px auto}
+      .login-card{padding:30px 20px}
+      .login-title{font-size:24px}
+      .admin-links{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="loginSection" class="login-card">
+      <h1 class="login-title">🔐 관리자 로그인</h1>
+      <p class="login-subtitle">NBTI 길드 사진첩 관리자 페이지</p>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="password">비밀번호</label>
+          <input type="password" id="password" class="form-input" placeholder="관리자 비밀번호를 입력하세요" required>
+        </div>
+        <button type="submit" class="btn">로그인</button>
+        <div id="errorMsg" class="error" style="display:none"></div>
+      </form>
+    </div>
+
+    <div id="adminSection" class="login-card" style="display:none">
+      <button id="logoutBtn" class="logout-btn">로그아웃</button>
+      <h1 class="login-title">👑 관리자 대시보드</h1>
+      <p class="login-subtitle">사진첩 관리 도구</p>
+      
+      <div class="admin-links">
+        <a href="./index.html" class="admin-link">
+          <h3>📷 사진첩 관리</h3>
+          <p>사진 업로드, 수정, 삭제</p>
+        </a>
+        <a href="./guild.html" class="admin-link">
+          <h3>👥 길드원 관리</h3>
+          <p>길드원 추가, 삭제, 업로드</p>
+        </a>
+      </div>
+      
+      <div style="margin-top:30px;padding:20px;background:#0f1418;border-radius:10px;border:1px solid #2a3640">
+        <h3 style="margin:0 0 15px;color:var(--accent)">📊 현재 상태</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+          <div>사진 개수: <span id="photoCount" style="color:var(--ok)">0</span></div>
+          <div>길드원 수: <span id="memberCount" style="color:var(--ok)">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="delete-modal">
+    <div class="delete-content">
+      <div class="delete-header">
+        <h2 class="delete-title">⚠️ 삭제 확인</h2>
+      </div>
+      <div class="delete-body">
+        <p id="deleteMessage" class="delete-message">정말로 삭제하시겠습니까?</p>
+        <div class="delete-actions">
+          <button id="deleteCancel" class="btn btn-cancel">취소</button>
+          <button id="deleteConfirm" class="btn btn-danger">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 보안 강화된 관리자 인증 시스템
+    const ADMIN_KEY = "admin.authenticated";
+    const ADMIN_SESSION_KEY = "admin.session";
+    const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2시간
+    const IP_LOCK_KEY = "admin.ip_locks";
+    const MAX_ATTEMPTS = 3;
+    const LOCK_DURATION = 24 * 60 * 60 * 1000; // 24시간
+    
+    // 해시 함수 (간단한 해시)
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // 32bit 정수로 변환
+      }
+      return Math.abs(hash).toString(16);
+    }
+    
+    // 비밀번호 해시값 (실제 비밀번호: nbti2024)
+    const ADMIN_PASSWORD_HASH = "514ac857"; // simpleHash("nbti2024")의 결과값
+    
+    // 클라이언트 IP 추출 (간단한 방법)
+    function getClientIP() {
+      // 실제 IP는 서버에서만 얻을 수 있지만, 클라이언트 사이드에서는 
+      // User-Agent + 시간대 + 화면 해상도 등을 조합하여 고유 식별자 생성
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('IP fingerprint', 2, 2);
+      
+      const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        new Date().getTimezoneOffset(),
+        canvas.toDataURL()
+      ].join('|');
+      
+      return simpleHash(fingerprint);
+    }
+    
+    // IP 락 관리
+    function getIPLocks() {
+      try {
+        return JSON.parse(localStorage.getItem(IP_LOCK_KEY) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+    
+    function saveIPLocks(locks) {
+      localStorage.setItem(IP_LOCK_KEY, JSON.stringify(locks));
+    }
+    
+    function isIPLocked() {
+      const clientIP = getClientIP();
+      const locks = getIPLocks();
+      const lockData = locks[clientIP];
+      
+      if (!lockData) return false;
+      
+      const now = Date.now();
+      if (now - lockData.timestamp > LOCK_DURATION) {
+        // 락 만료
+        delete locks[clientIP];
+        saveIPLocks(locks);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    function addIPAttempt() {
+      const clientIP = getClientIP();
+      const locks = getIPLocks();
+      
+      if (!locks[clientIP]) {
+        locks[clientIP] = { attempts: 0, timestamp: Date.now() };
+      }
+      
+      locks[clientIP].attempts++;
+      locks[clientIP].timestamp = Date.now();
+      
+      if (locks[clientIP].attempts >= MAX_ATTEMPTS) {
+        locks[clientIP].locked = true;
+        locks[clientIP].lockTime = Date.now();
+      }
+      
+      saveIPLocks(locks);
+      return locks[clientIP].attempts;
+    }
+    
+    function clearIPAttempts() {
+      const clientIP = getClientIP();
+      const locks = getIPLocks();
+      delete locks[clientIP];
+      saveIPLocks(locks);
+    }
+    
+    const loginSection = document.getElementById('loginSection');
+    const adminSection = document.getElementById('adminSection');
+    const loginForm = document.getElementById('loginForm');
+    const passwordInput = document.getElementById('password');
+    const errorMsg = document.getElementById('errorMsg');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const photoCount = document.getElementById('photoCount');
+    const memberCount = document.getElementById('memberCount');
+    
+    // 삭제 모달 요소들
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteMessage = document.getElementById('deleteMessage');
+    const deleteCancel = document.getElementById('deleteCancel');
+    const deleteConfirm = document.getElementById('deleteConfirm');
+
+    // 세션 유효성 검사
+    function isSessionValid() {
+      const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+      if (!sessionData) return false;
+      
+      try {
+        const session = JSON.parse(sessionData);
+        const now = Date.now();
+        return (now - session.timestamp) < SESSION_TIMEOUT;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    // 관리자 인증 확인
+    function checkAdminAuth() {
+      // IP 락 확인
+      if (isIPLocked()) {
+        showLockedMessage();
+        return;
+      }
+      
+      const isAuthenticated = localStorage.getItem(ADMIN_KEY) === 'true';
+      const sessionValid = isSessionValid();
+      
+      if (isAuthenticated && sessionValid) {
+        showAdminSection();
+      } else {
+        // 세션 만료 시 자동 로그아웃
+        if (isAuthenticated && !sessionValid) {
+          logout();
+        }
+        showLoginSection();
+      }
+    }
+
+    // 락 메시지 표시
+    function showLockedMessage() {
+      loginSection.innerHTML = `
+        <h1 class="login-title">🚫 접근 차단</h1>
+        <p class="login-subtitle">너무 많은 로그인 시도로 인해 접근이 차단되었습니다.</p>
+        <div style="margin:20px 0;padding:20px;background:#2a1010;border:1px solid #5a1c1c;border-radius:10px">
+          <p style="color:var(--danger);margin:0;font-size:14px">
+            이 기기에서 3번의 로그인 실패로 인해 24시간 동안 접근이 제한됩니다.<br>
+            관리자에게 문의하거나 24시간 후 다시 시도해주세요.
+          </p>
+        </div>
+        <div style="margin-top:20px;font-size:12px;color:var(--muted)">
+          <p>차단된 기기 정보:</p>
+          <p style="font-family:monospace;word-break:break-all">${getClientIP()}</p>
+        </div>
+      `;
+      adminSection.style.display = 'none';
+    }
+
+    // 로그인 섹션 표시
+    function showLoginSection() {
+      loginSection.innerHTML = `
+        <h1 class="login-title">🔐 관리자 로그인</h1>
+        <p class="login-subtitle">NBTI 길드 사진첩 관리자 페이지</p>
+        
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="password">비밀번호</label>
+            <input type="password" id="password" class="form-input" placeholder="관리자 비밀번호를 입력하세요" required>
+          </div>
+          <button type="submit" class="btn">로그인</button>
+          <div id="errorMsg" class="error" style="display:none"></div>
+        </form>
+      `;
+      
+      // 이벤트 리스너 재등록
+      const newForm = document.getElementById('loginForm');
+      const newPasswordInput = document.getElementById('password');
+      const newErrorMsg = document.getElementById('errorMsg');
+      
+      newForm.addEventListener('submit', handleLogin);
+      
+      adminSection.style.display = 'none';
+    }
+
+    // 관리자 섹션 표시
+    function showAdminSection() {
+      loginSection.style.display = 'none';
+      adminSection.style.display = 'block';
+      updateStats();
+    }
+
+    // 통계 업데이트
+    function updateStats() {
+      try {
+        const photos = JSON.parse(localStorage.getItem('album.items.v1') || '[]');
+        const members = JSON.parse(localStorage.getItem('guild.members.v1') || '[]');
+        photoCount.textContent = photos.length;
+        memberCount.textContent = members.length;
+      } catch (e) {
+        photoCount.textContent = '0';
+        memberCount.textContent = '0';
+      }
+    }
+
+    // 로그인 처리 함수
+    function handleLogin(e) {
+      e.preventDefault();
+      const passwordInput = document.getElementById('password');
+      const errorMsg = document.getElementById('errorMsg');
+      const password = passwordInput.value.trim();
+      const passwordHash = simpleHash(password);
+      
+      if (passwordHash === ADMIN_PASSWORD_HASH) {
+        // 인증 성공
+        localStorage.setItem(ADMIN_KEY, 'true');
+        clearIPAttempts(); // 성공 시 시도 횟수 초기화
+        
+        // 세션 정보 저장
+        const sessionData = {
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent,
+          ip: getClientIP()
+        };
+        localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
+        
+        showAdminSection();
+      } else {
+        // 실패 시 IP 기반 락 처리
+        const attempts = addIPAttempt();
+        const remainingAttempts = MAX_ATTEMPTS - attempts;
+        
+        if (attempts >= MAX_ATTEMPTS) {
+          showLockedMessage();
+        } else {
+          errorMsg.textContent = `비밀번호가 올바르지 않습니다. (${remainingAttempts}회 남음)`;
+          errorMsg.style.display = 'block';
+          passwordInput.value = '';
+        }
+      }
+    }
+
+    // 로그아웃 함수
+    function logout() {
+      localStorage.removeItem(ADMIN_KEY);
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      localStorage.removeItem('login_attempts');
+    }
+    
+    // 관리자용 락 해제 함수 (개발자 도구에서 사용)
+    function unlockAllIPs() {
+      localStorage.removeItem(IP_LOCK_KEY);
+      console.log('모든 IP 락이 해제되었습니다.');
+    }
+    
+    // 특정 IP 락 해제 함수
+    function unlockIP(ipHash) {
+      const locks = getIPLocks();
+      delete locks[ipHash];
+      saveIPLocks(locks);
+      console.log(`IP ${ipHash}의 락이 해제되었습니다.`);
+    }
+    
+    // 현재 락된 IP 목록 확인
+    function getLockedIPs() {
+      const locks = getIPLocks();
+      const lockedIPs = [];
+      for (const [ip, data] of Object.entries(locks)) {
+        if (data.locked) {
+          lockedIPs.push({
+            ip: ip,
+            attempts: data.attempts,
+            lockTime: new Date(data.lockTime).toLocaleString(),
+            remainingTime: Math.max(0, LOCK_DURATION - (Date.now() - data.lockTime))
+          });
+        }
+      }
+      console.table(lockedIPs);
+      return lockedIPs;
+    }
+    
+    // 삭제 확인 모달 함수들
+    let currentDeleteCallback = null;
+    
+    function showDeleteModal(message, callback) {
+      deleteMessage.textContent = message;
+      currentDeleteCallback = callback;
+      deleteModal.style.display = 'flex';
+    }
+    
+    function hideDeleteModal() {
+      deleteModal.style.display = 'none';
+      currentDeleteCallback = null;
+    }
+    
+    // 삭제 모달 이벤트
+    deleteCancel.addEventListener('click', hideDeleteModal);
+    deleteConfirm.addEventListener('click', () => {
+      if (currentDeleteCallback) {
+        currentDeleteCallback();
+      }
+      hideDeleteModal();
+    });
+    
+    // 모달 배경 클릭으로 닫기
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        hideDeleteModal();
+      }
+    });
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && deleteModal.style.display === 'flex') {
+        hideDeleteModal();
+      }
+    });
+    
+    // 전역 함수로 노출 (개발자 도구에서 사용 가능)
+    window.unlockAllIPs = unlockAllIPs;
+    window.unlockIP = unlockIP;
+    window.getLockedIPs = getLockedIPs;
+    window.showDeleteModal = showDeleteModal;
+    
+    // 로그아웃 버튼
+    logoutBtn.addEventListener('click', () => {
+      logout();
+      showLoginSection();
+    });
+
+    // 초기 로드
+    checkAdminAuth();
+    
+    // 개발자 도구에서 사용할 수 있는 도움말
+    console.log(`
+🔐 NBTI 관리자 시스템 도움말:
+
+📋 락 관리 명령어:
+- getLockedIPs() : 현재 락된 IP 목록 확인
+- unlockAllIPs() : 모든 IP 락 해제
+- unlockIP('IP해시') : 특정 IP 락 해제
+
+🗑️ 삭제 관리 명령어:
+- showDeleteModal('메시지', callback) : 삭제 확인 모달 표시
+
+💡 사용 예시:
+- getLockedIPs() // 락된 IP 목록 보기
+- unlockAllIPs() // 모든 락 해제
+- unlockIP('abc123') // 특정 IP 락 해제
+- showDeleteModal('정말 삭제하시겠습니까?', () => console.log('삭제됨'))
+
+⚠️ 주의: 이 명령어들은 관리자만 사용하세요.
+    `);
+  </script>
+</body>
+</html>
